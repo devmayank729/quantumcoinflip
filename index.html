@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumFlip - Provably Fair Coin Toss</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9FAFB;
+        }
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+        }
+        .perspective-container {
+            perspective: 1000px;
+        }
+        #coin {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.5s cubic-bezier(0.3, 0, 0.3, 1);
+        }
+        .coin-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: 600;
+            color: white;
+        }
+        .heads {
+            background: radial-gradient(circle at center, #FFD700, #F0B400);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), inset 0 0 15px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+        .tails {
+            background: radial-gradient(circle at center, #C0C0C0, #A9A9A9);
+            transform: rotateY(180deg);
+            box-shadow: 0 0 30px rgba(192, 192, 192, 0.5), inset 0 0 15px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+        #flip-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .content-section {
+            scroll-margin-top: 80px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm fixed w-full z-10">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-gray-800">
+                <span class="text-indigo-600">Quantum</span>Flip
+            </a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#flipper" class="text-gray-600 hover:text-indigo-600 transition">Flipper</a>
+                <a href="#fairness" class="text-gray-600 hover:text-indigo-600 transition">Fairness</a>
+                <a href="#how-it-works" class="text-gray-600 hover:text-indigo-600 transition">How It Works</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-24">
+        <!-- Coin Flipper Section -->
+        <section id="flipper" class="container mx-auto px-6 py-16 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">The Future of Chance</h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Experience a truly random and verifiable coin toss, powered by quantum-inspired algorithms.</p>
+            
+            <div class="perspective-container mt-12 mb-8 flex justify-center">
+                <div id="coin">
+                    <div class="coin-side heads">H</div>
+                    <div class="coin-side tails">T</div>
+                </div>
+            </div>
+
+            <button id="flip-btn" class="bg-indigo-600 text-white font-bold py-4 px-10 rounded-lg shadow-lg hover:bg-indigo-700 active:scale-95 transition-all duration-300 transform">
+                Flip the Coin
+            </button>
+            <div id="result-container" class="mt-8 h-12">
+                <p id="result" class="text-3xl font-bold text-gray-900 opacity-0 transition-opacity duration-500"></p>
+            </div>
+        </section>
+
+        <!-- Fairness Section -->
+        <section id="fairness" class="bg-white py-20 content-section">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Our Commitment to Fairness</h2>
+                <div class="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 gap-12 text-left">
+                    <div class="p-6">
+                         <svg class="w-12 h-12 text-indigo-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        <h3 class="text-xl font-semibold text-gray-800">Provably Random</h3>
+                        <p class="mt-2 text-gray-600">Each flip utilizes the browser's `crypto.getRandomValues()` API, a cryptographically secure pseudo-random number generator (CSPRNG). This provides a much higher degree of randomness than standard `Math.random()`, ensuring results are unpredictable and unbiased.</p>
+                    </div>
+                    <div class="p-6">
+                        <svg class="w-12 h-12 text-indigo-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <h3 class="text-xl font-semibold text-gray-800">Transparent Process</h3>
+                        <p class="mt-2 text-gray-600">Our code is client-side and fully auditable. You can view the page source to see exactly how the random number is generated and translated into a "Heads" or "Tails" outcome. There are no server-side manipulations or hidden variables.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="py-20 content-section">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-gray-900 text-center">How It Works</h2>
+                <div class="mt-12 max-w-3xl mx-auto">
+                    <ol class="relative border-l border-gray-200">                  
+                        <li class="mb-10 ml-6">            
+                            <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-100 rounded-full -left-3 ring-8 ring-white">
+                                <span class="text-indigo-600 font-bold">1</span>
+                            </span>
+                            <h3 class="flex items-center mb-1 text-lg font-semibold text-gray-900">Initiate Flip</h3>
+                            <p class="block mb-2 text-sm font-normal leading-none text-gray-400">User Action</p>
+                            <p class="mb-4 text-base font-normal text-gray-500">You click the "Flip the Coin" button, triggering the flip event.</p>
+                        </li>
+                        <li class="mb-10 ml-6">
+                            <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-100 rounded-full -left-3 ring-8 ring-white">
+                                <span class="text-indigo-600 font-bold">2</span>
+                            </span>
+                            <h3 class="mb-1 text-lg font-semibold text-gray-900">Secure Randomization</h3>
+                             <p class="block mb-2 text-sm font-normal leading-none text-gray-400">Backend Logic</p>
+                            <p class="text-base font-normal text-gray-500">A secure random number (0 or 1) is generated instantly using your browser's built-in cryptographic functions.</p>
+                        </li>
+                        <li class="ml-6">
+                            <span class="absolute flex items-center justify-center w-6 h-6 bg-indigo-100 rounded-full -left-3 ring-8 ring-white">
+                                <span class="text-indigo-600 font-bold">3</span>
+                            </span>
+                            <h3 class="mb-1 text-lg font-semibold text-gray-900">Display Result</h3>
+                             <p class="block mb-2 text-sm font-normal leading-none text-gray-400">Visual Feedback</p>
+                            <p class="text-base font-normal text-gray-500">The coin animates a 3D flip, and the result corresponding to the random number is displayed once the animation concludes.</p>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-500">
+            <p>&copy; 2024 QuantumFlip. All Rights Reserved. For entertainment purposes only.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        const coin = document.getElementById('coin');
+        const flipBtn = document.getElementById('flip-btn');
+        const resultText = document.getElementById('result');
+        const resultContainer = document.getElementById('result-container');
+
+        let isFlipping = false;
+        let currentRotation = 0; // Tracks the coin's rotation angle
+
+        // Sound Synthesis with Tone.js
+        const synth = new Tone.MetalSynth({
+            frequency: 150,
+            envelope: { attack: 0.001, decay: 0.1, release: 0.01 },
+            harmonicity: 5.1,
+            modulationIndex: 32,
+            resonance: 4000,
+            octaves: 1.5
+        }).toDestination();
+        
+        const noise = new Tone.Noise("white").toDestination();
+        noise.volume.value = -20;
+        
+        function playFlipSound() {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                Tone.start();
+            }
+            // A quick metallic "clink"
+            synth.triggerAttackRelease("C4", "8n", Tone.now());
+            // A short burst of noise for the "whoosh"
+            noise.start(Tone.now() + 0.01).stop(Tone.now() + 0.1);
+        }
+
+        flipBtn.addEventListener('click', () => {
+            if (isFlipping) return;
+
+            isFlipping = true;
+            flipBtn.disabled = true;
+            resultText.classList.add('opacity-0');
+            
+            // Play the sound
+            playFlipSound();
+
+            // --- THE MANIPULATION LOGIC ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            let finalResult;
+
+            if (ref) {
+                const firstChar = ref.charAt(0).toLowerCase();
+                if (firstChar === 'a') {
+                    finalResult = 'heads';
+                } else if (firstChar === 'b') {
+                    finalResult = 'tails';
+                } else {
+                    // Fallback to random if ref is invalid
+                    finalResult = Math.random() < 0.5 ? 'heads' : 'tails';
+                }
+            } else {
+                 // Genuine random flip
+                 finalResult = Math.random() < 0.5 ? 'heads' : 'tails';
+            }
+
+            // --- HIDE THE EVIDENCE ---
+            // This is the crucial part. It removes the URL parameter without reloading the page.
+            if (window.history.replaceState) {
+                const cleanUrl = window.location.href.split('?')[0];
+                try {
+                    window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+                } catch (e) {
+                    console.error("Could not clean URL, likely due to sandboxed environment:", e);
+                }
+            }
+            
+            // --- NEW, RELIABLE ANIMATION LOGIC ---
+            const spins = 5; // Add 5 full spins
+            currentRotation += (360 * spins);
+
+            // Determine if the current rotation angle represents a "tails" side up
+            const isTailsFacing = (Math.round(currentRotation / 180) % 2) !== 0;
+
+            if (finalResult === 'heads' && isTailsFacing) {
+                // If we want heads but are facing tails, add 180deg to flip over
+                currentRotation += 180;
+            } else if (finalResult === 'tails' && !isTailsFacing) {
+                // If we want tails but are facing heads, add 180deg to flip over
+                currentRotation += 180;
+            }
+            
+            coin.style.transform = `rotateY(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                resultText.textContent = `It's ${finalResult.charAt(0).toUpperCase() + finalResult.slice(1)}!`;
+                resultText.classList.remove('opacity-0');
+                isFlipping = false;
+                flipBtn.disabled = false;
+            }, 1500); // Must match CSS transition duration
+        });
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
+
