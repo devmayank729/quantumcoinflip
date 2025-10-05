@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GenuineCoin — Interactive Coin Flipper</title>
+<meta name="description" content="GenuineCoin — A high-fidelity coin flip experience with animation, sound and full documentation.">
+<style>
+  /* Reset and base */
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  :root{
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --accent: #0f62fe;
+    --accent-2: #0b5bd8;
+    --danger: #b91c1c;
+    --glass: rgba(255,255,255,0.6);
+  }
+  body.dark{
+    --bg:#0b1220; --card:#0b1220; --muted:#b8c0d3; --glass: rgba(255,255,255,0.04);
+  }
+  body{background:linear-gradient(180deg,var(--bg),#e9eefb); color:#0b1220; padding:24px; box-sizing:border-box;}
+  header{display:flex;gap:16px;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;}
+  .brand{display:flex;gap:12px;align-items:center;}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;box-shadow:0 6px 18px rgba(12,42,120,0.12);}
+  h1{margin:0;font-size:20px}
+  .subtitle{font-size:12px;color:var(--muted)}
+  main{max-width:1100px;margin:28px auto;display:grid;grid-template-columns:1fr 420px;gap:24px;align-items:start;}
+  .panel{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 8px 30px rgba(32,40,60,0.06);min-height:200px;}
+  .bigpanel{grid-column:1 / span 2; padding:28px;}
+  /* coin area */
+  .flip-area{display:flex;flex-direction:column;align-items:center;gap:18px;padding:28px;}
+  .coin-stage{width:260px;height:260px;display:flex;align-items:center;justify-content:center;perspective:1200px;}
+  .coin{
+    width:180px;height:180px;border-radius:50%;position:relative;
+    transform-style:preserve-3d;transition:transform 1.2s cubic-bezier(.2,.9,.2,1);
+    box-shadow:0 18px 40px rgba(16,24,40,0.12), inset 0 -6px 18px rgba(0,0,0,0.08);
+    background:linear-gradient(180deg,#fefefe,#f0f6ff);
+    display:flex;align-items:center;justify-content:center;font-size:64px;
+    user-select:none;
+  }
+  .coin .side {position:absolute;inset:0;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;border-radius:50%;}
+  .coin .heads{transform:rotateY(0deg);font-weight:800;}
+  .coin .tails{transform:rotateY(180deg);font-weight:800;}
+  .shadow{width:220px;height:28px;border-radius:50%;background:linear-gradient(180deg,rgba(0,0,0,0.18),rgba(0,0,0,0.06));filter:blur(6px);opacity:0.7;transition:transform 1.2s,opacity 1.2s;}
+  .controls{display:flex;gap:12px;align-items:center;}
+  button{background:var(--accent);color:white;border:0;padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(15,98,254,0.18);}
+  button.secondary{background:transparent;color:var(--accent);border:1px solid rgba(15,98,254,0.12);box-shadow:none;}
+  .result{font-size:18px;font-weight:700}
+  .small-muted{font-size:13px;color:var(--muted)}
+  /* presets banner */
+  .preset-banner{background:linear-gradient(90deg,#fff7ed,#fff1f2);border:1px solid rgba(0,0,0,0.04);padding:12px;border-radius:8px;display:flex;gap:10px;align-items:center;color:#663c00;}
+  .rotator{display:inline-block;transform-origin:center center;}
+  /* long content layout */
+  .toc{font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:8px}
+  .toc a{color:var(--accent);text-decoration:none}
+  footer{max-width:1100px;margin:30px auto;color:var(--muted);font-size:13px;text-align:center}
+  /* responsive */
+  @media (max-width:980px){
+    main{grid-template-columns:1fr; padding:0 12px}
+    .bigpanel{grid-column:1}
+  }
+  /* animated flipping classes */
+  .flip-anim {
+    animation-duration:1200ms; animation-timing-function:cubic-bezier(.24,.92,.12,1); animation-fill-mode:forwards;
+  }
+  /* long text styles */
+  h2{margin-top:0}
+  .legal{line-height:1.6;color:var(--muted)}
+  .tos-section{max-height:420px;overflow:auto;padding-right:8px}
+  /* fancy glass card for long site look */
+  .glass{background:var(--glass);backdrop-filter: blur(6px); border-radius:12px; padding:14px;}
+  /* theme toggle */
+  .theme-toggle{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:8px;border-radius:8px;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true">GC</div>
+    <div>
+      <h1>GenuineCoin</h1>
+      <div class="subtitle">High-fidelity coin flips — animation, sound & documentation</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <button id="shareButton" class="secondary" title="Share link">Share</button>
+    <button id="themeToggle" class="theme-toggle" aria-pressed="false">Toggle Dark</button>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="flip-area">
+      <div id="presetBanner" class="preset-banner" style="display:none">
+        <div style="font-size:18px">⚠️</div>
+        <div>
+          <div style="font-weight:700">Preset Result Active</div>
+          <div class="small-muted" id="presetBannerText">A ref parameter has preset the result for this flip.</div>
+        </div>
+      </div>
+
+      <div class="coin-stage" aria-hidden="false">
+        <div id="coin" class="coin" role="img" aria-label="Coin showing heads">
+          <div class="side heads">H</div>
+          <div class="side tails">T</div>
+        </div>
+      </div>
+
+      <div id="shadow" class="shadow" aria-hidden="true"></div>
+
+      <div class="controls">
+        <button id="flipBtn" aria-label="Flip coin">Flip Coin</button>
+        <button id="resetBtn" class="secondary" aria-label="Reset">Reset</button>
+        <div style="margin-left:12px" class="small-muted">Press <kbd>Space</kbd> to flip</div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:center;margin-top:8px;">
+        <div class="result" id="resultText">Ready to flip</div>
+        <div class="small-muted" id="explainText">No preset parameter detected.</div>
+      </div>
+
+      <div style="margin-top:6px;" class="small-muted">Tip: append <code>?ref=abc</code> for heads and <code>?ref=def</code> for tails.</div>
+    </div>
+  </section>
+
+  <aside class="panel glass" aria-labelledby="controlsHeading">
+    <h3 id="controlsHeading" style="margin-top:0">Controls & Details</h3>
+    <div class="toc">
+      <div><strong>Last flip:</strong> <span id="lastFlip">—</span></div>
+      <div><strong>Flip count:</strong> <span id="flipCount">0</span></div>
+      <div><strong>Ref param:</strong> <span id="refParam">none</span></div>
+      <a href="#about">About</a>
+      <a href="#terms">Terms & Conditions</a>
+      <a href="#privacy">Privacy Policy</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <hr style="margin:12px 0">
+    <div>
+      <label style="font-size:13px" for="simulateFair">Enforce fairness</label>
+      <div style="margin-top:8px">
+        <input type="checkbox" id="simulateFair" checked>
+        <label for="simulateFair" class="small-muted">If checked, the coin ignores ref presets and flips fairly (random).</label>
+      </div>
+    </div>
+    <hr style="margin:12px 0">
+    <div style="font-size:13px;color:var(--muted)">
+      This demo contains a deterministic mapping for demonstrative purposes. If a query string named <code>ref</code> is present and matches certain tokens, the flip will produce a predetermined result; otherwise the flip is random. For transparency, when a preset is used a clear banner will appear showing the presence of a preset token.
+    </div>
+  </aside>
+
+  <section class="bigpanel panel" id="about">
+    <h2>About GenuineCoin</h2>
+    <p class="legal">GenuineCoin is a demonstration site created to show how coin-flip animations, deterministic mappings, and rich UI content can be implemented on the web. The site contains an accessible coin animation, a programmatic audio flip sound using the Web Audio API, and a comprehensive set of legal and informational pages to make the experience feel genuine and well-documented.</p>
+
+    <h3 style="margin-top:18px">Design goals</h3>
+    <ul class="legal">
+      <li>Provide an intuitive, tactile flip interaction.</li>
+      <li>Demonstrate how small deterministic features (query-driven) can be implemented while keeping the UI transparent.</li>
+      <li>Use modern, accessible HTML/CSS/JS without external frameworks so this demo runs anywhere.</li>
+    </ul>
+
+    <hr style="margin:16px 0">
+
+    <h3 id="terms">Terms & Conditions</h3>
+    <div class="tos-section legal">
+      <p><strong>Acceptance of terms:</strong> By using this site you agree to these Terms & Conditions. If you do not agree, please do not use the site.</p>
+
+      <h4>1. Service description</h4>
+      <p>This site provides an entertainment-oriented coin flip simulation. It may, at the request of the URL, produce predetermined results. The presence of a predetermined result will be clearly displayed to users.</p>
+
+      <h4>2. Disclaimer</h4>
+      <p>The site is provided "as-is" without warranties of any kind. To the fullest extent permitted by applicable law, the site owner disclaims all warranties, including but not limited to merchantability, fitness for a particular purpose and non-infringement.</p>
+
+      <h4>3. Use limitations</h4>
+      <p>You agree not to use this site for fraudulent, illegal, or malicious activities. It is your responsibility to ensure the use of this site complies with local laws and platform policies.</p>
+
+      <h4>4. Deterministic presets</h4>
+      <p>Certain query parameters can preset the flip result for demonstration and testing. The site will show a visible banner when such presets are active. Modifying the URL to change outcome is a demonstration feature only and not recommended for use in any transaction, wager, or bet.</p>
+
+      <h4>5. Copyright & license</h4>
+      <p>All code shown is © the site author. You may reuse, adapt or learn from this code for personal or educational purposes provided you retain attribution and license terms, unless otherwise noted.</p>
+
+      <h4>6. Liability</h4>
+      <p>The site owner is not liable for any direct, indirect, incidental, consequential, special, or exemplary damages resulting from the use or inability to use the service.</p>
+
+      <h4>7. Contact</h4>
+      <p>For inquiries, corrections, or removal requests, contact the site administrator at <em>admin@example.com</em>.</p>
+
+      <!-- Add more long boilerplate to increase perceived length -->
+      <h4>8. Additional provisions</h4>
+      <p>This Terms & Conditions section contains additional terms and clarifications about intellectual property rights, permitted use, modifications and termination. It also establishes the governing law (which in this doc is illustrative) and instructions for dispute resolution.</p>
+
+      <p style="margin-top:12px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis risus eget urna mollis ornare vel eu leo. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Vestibulum id ligula porta felis euismod semper. Donec ullamcorper nulla non metus auctor fringilla. Curabitur blandit tempus porttitor.</p>
+
+      <p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec id elit non mi porta gravida at eget metus.</p>
+
+    </div>
+
+    <hr style="margin:16px 0">
+
+    <h3 id="privacy">Privacy Policy</h3>
+    <div class="legal">
+      <p>This demo collects no personal data by default. Local storage is used only to keep minor UI preferences and a small flip history that never leaves the client machine. If you choose to share a URL containing a ref parameter, you are responsible for how that link is distributed.</p>
+
+      <h4>Data collected</h4>
+      <p>Only the following are stored locally: theme preference, number of flips this browser session, and the last flip result. No analytics are recorded.</p>
+
+      <h4>Cookies & third parties</h4>
+      <p>This demo does not load any third-party analytics or trackers. If you embed additional scripts or host this on a site with analytics, third-party policies may apply.</p>
+
+      <h4>Children</h4>
+      <p>Not intended for use by minors under the age of 13.</p>
+    </div>
+
+    <hr style="margin:16px 0">
+
+    <h3 id="faq">Frequently Asked Questions</h3>
+    <div class="legal">
+      <h4>Q: Is the flip fair?</h4>
+      <p>A: By default yes — the flip uses a cryptographically-seeded random source if no preset is active. For demo/test, the ref param can preset a result; the UI shows a banner in that case.</p>
+
+      <h4>Q: How do I force a result?</h4>
+      <p>A: Append <code>?ref=abc</code> for heads or <code>?ref=def</code> for tails in the URL. Example: <code>index.html?ref=abc</code>. A banner will show that the result is preset. You can toggle "Enforce fairness" to ignore presets.</p>
+
+      <h4>Q: Can I change which tokens do what?</h4>
+      <p>A: Yes — the tokens are defined in the script. Edit the mapping if you want different tokens. Please keep usage ethical and transparent.</p>
+
+      <h4>Q: Can I use this in production?</h4>
+      <p>A: This is a demo. If you intend to run a production service, review security, hosting, and legal requirements carefully.</p>
+
+      <p style="margin-top:12px">End of FAQ. Thanks for reading — this page was purposely verbose to give the site depth and the feeling of a genuine service.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div style="max-width:1100px;margin:0 auto;">
+    <div style="padding:16px;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,0.6),rgba(255,255,255,0.4));box-shadow:0 8px 30px rgba(16,24,40,0.06);">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">GenuineCoin</div>
+          <div class="small-muted">Built with care • Not for use in wagering</div>
+        </div>
+        <div class="small-muted">© <span id="year"></span> GenuineCoin. All rights reserved.</div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* GenuineCoin JS
+   - Parses ref param
+   - If ref == "abc" -> Heads
+   - If ref == "def" -> Tails
+   - Shows banner when preset is active
+   - Plays flip sound via WebAudio API
+   - Provides fair mode toggle
+*/
+
+/* Utility: parse query params */
+function getQueryParam(name) {
+  var search = window.location.search;
+  if (!search) {
+    return null;
+  }
+  var paramsString = search.substring(1); // remove '?'
+  var pairs = paramsString.split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    var parts = pairs[i].split('=');
+    if (decodeURIComponent(parts[0]) === name) {
+      return parts.length > 1 ? decodeURIComponent(parts[1]) : '';
+    }
+  }
+  return null;
+}
+
+/* Elements */
+var coinEl = document.getElementById('coin');
+var flipButton = document.getElementById('flipBtn');
+var resetButton = document.getElementById('resetBtn');
+var resultTextEl = document.getElementById('resultText');
+var explainTextEl = document.getElementById('explainText');
+var lastFlipEl = document.getElementById('lastFlip');
+var flipCountEl = document.getElementById('flipCount');
+var refParamEl = document.getElementById('refParam');
+var presetBanner = document.getElementById('presetBanner');
+var presetBannerText = document.getElementById('presetBannerText');
+var simulateFairCheckbox = document.getElementById('simulateFair');
+var yearSpan = document.getElementById('year');
+var shadowEl = document.getElementById('shadow');
+var shareButton = document.getElementById('shareButton');
+var themeToggle = document.getElementById('themeToggle');
+
+yearSpan.textContent = new Date().getFullYear();
+
+/* State */
+var flipCount = 0;
+var lastFlip = null;
+var isFlipping = false;
+
+/* Deterministic mapping: tokens -> forced results
+   You can edit these tokens. For demonstration we use 'abc' and 'def'. */
+var deterministicMapping = {
+  "abc": "heads",
+  "def": "tails"
+};
+
+/* Read ref param */
+var refParam = getQueryParam('ref') || null;
+refParamEl.textContent = refParam ? refParam : 'none';
+
+/* Show banner if ref param present and matches mapping */
+if (refParam) {
+  var mapped = deterministicMapping[refParam];
+  if (mapped) {
+    presetBanner.style.display = 'flex';
+    presetBannerText.textContent = 'A preset token was detected in the URL. This flip result will be predetermined unless you enable "Enforce fairness". Token: "' + refParam + '"';
+    explainTextEl.textContent = 'A preset is active — UI will show final result immediately after flip.';
+  } else {
+    // ref present but unknown token
+    presetBanner.style.display = 'flex';
+    presetBannerText.textContent = 'A ref token was detected but does not match known presets. The flip will be random unless you change tokens.';
+    explainTextEl.textContent = 'Unknown token — flip will be random.';
+  }
+} else {
+  explainTextEl.textContent = 'No preset parameter detected.';
+}
+
+/* WebAudio: generate a coin flip sound without files */
+var audioContext = null;
+function ensureAudioContext() {
+  if (!audioContext) {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      audioContext = null;
+    }
+  }
+}
+
+/* Make a short metallic coin flip sound using oscillator + noise burst */
+function playCoinSound() {
+  ensureAudioContext();
+  if (!audioContext) {
+    return;
+  }
+  var ctx = audioContext;
+  // Oscillator for metallic ring
+  var osc = ctx.createOscillator();
+  var gain = ctx.createGain();
+  var q = ctx.createBiquadFilter();
+  q.type = 'highpass';
+  q.frequency.value = 800;
+  osc.type = 'square';
+  osc.frequency.value = 1200;
+
+  // Noise burst
+  var bufferSize = 2 * ctx.sampleRate;
+  var noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  var output = noiseBuffer.getChannelData(0);
+  for (var i = 0; i < bufferSize; i++) {
+    output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.03));
+  }
+  var noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer;
+
+  // Connect chain
+  osc.connect(gain);
+  noise.connect(gain);
+  gain.connect(q);
+  q.connect(ctx.destination);
+
+  // Envelope
+  var now = ctx.currentTime;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(0.6, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+
+  osc.start(now);
+  noise.start(now);
+  // Stop
+  osc.stop(now + 1.0);
+  noise.stop(now + 0.2);
+}
+
+/* Render the coin face and shadow scale for depth illusion */
+function setCoinFace(face) {
+  if (face === 'heads') {
+    coinEl.style.transform = 'rotateY(0deg)';
+    coinEl.setAttribute('aria-label','Coin showing heads');
+  } else {
+    coinEl.style.transform = 'rotateY(180deg)';
+    coinEl.setAttribute('aria-label','Coin showing tails');
+  }
+}
+
+/* Helper: get random boolean fairly */
+function fairRandomBoolean() {
+  // Use crypto.getRandomValues if available
+  if (window.crypto && window.crypto.getRandomValues) {
+    var array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return (array[0] % 2) === 0;
+  } else {
+    return Math.random() < 0.5;
+  }
+}
+
+/* Core flip logic */
+function performFlip() {
+  if (isFlipping) return;
+  isFlipping = true;
+
+  // Determine whether to follow preset or be fair
+  var enforceFair = simulateFairCheckbox.checked;
+  var finalResult = null;
+  if (!enforceFair && refParam) {
+    var mapped = deterministicMapping[refParam];
+    if (mapped) {
+      finalResult = mapped; // forced
+    }
+  }
+  if (!finalResult) {
+    // Randomly choose
+    finalResult = fairRandomBoolean() ? 'heads' : 'tails';
+  }
+
+  // Animate coin: spin multiple full rotations and end on the chosen face
+  // Heads: 0deg; Tails: 180deg
+  // Add some random extra rotations for naturalness
+  var extra = 4 + Math.floor(Math.random() * 4); // 4..7 extra flips
+  var finalAngle = (extra * 360) + (finalResult === 'heads' ? 0 : 180);
+
+  // Spin animation
+  coinEl.style.transition = 'transform 1.2s cubic-bezier(.24,.92,.12,1)';
+  coinEl.style.transform = 'rotateY(' + finalAngle + 'deg) rotateX(20deg)';
+
+  // Shadow scaling
+  shadowEl.style.transform = 'scale(1.05) translateY(-6px)';
+  shadowEl.style.opacity = '0.6';
+
+  // Play sound
+  playCoinSound();
+
+  // After animation completes, set final state, update UI
+  window.setTimeout(function() {
+    // Normalize to just the end face without big rotation
+    setCoinFace(finalResult);
+    shadowEl.style.transform = 'scale(1) translateY(0)';
+    shadowEl.style.opacity = '0.75';
+
+    flipCount++;
+    flipCountEl.textContent = flipCount;
+    lastFlip = finalResult;
+    lastFlipEl.textContent = finalResult.toUpperCase();
+    resultTextEl.textContent = finalResult === 'heads' ? 'Heads' : 'Tails';
+    // If preset used and enforceFair false, signal in explain area
+    if (!enforceFair && refParam && deterministicMapping[refParam]) {
+      explainTextEl.textContent = 'Result preset by ref parameter: "' + refParam + '"';
+    } else {
+      explainTextEl.textContent = 'Random fair flip';
+    }
+    isFlipping = false;
+  }, 1200);
+}
+
+/* Reset UI to neutral */
+function resetUI() {
+  coinEl.style.transition = 'transform 0.4s ease';
+  coinEl.style.transform = 'rotateY(0deg)';
+  resultTextEl.textContent = 'Ready to flip';
+  explainTextEl.textContent = refParam ? 'Preset parameter present' : 'No preset parameter detected';
+  lastFlipEl.textContent = '—';
+}
+
+/* Attach events */
+flipButton.addEventListener('click', function() {
+  performFlip();
+});
+resetButton.addEventListener('click', function() {
+  resetUI();
+});
+document.addEventListener('keydown', function(ev) {
+  if (ev.code === 'Space') {
+    ev.preventDefault();
+    performFlip();
+  }
+});
+
+/* Share button: copy URL */
+shareButton.addEventListener('click', function() {
+  var urlToShare = window.location.href;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(urlToShare).then(function() {
+      alert('Link copied to clipboard:\n' + urlToShare);
+    }).catch(function() {
+      prompt('Copy this link', urlToShare);
+    });
+  } else {
+    prompt('Copy this link', urlToShare);
+  }
+});
+
+/* Theme toggle */
+themeToggle.addEventListener('click', function() {
+  var bodyCl = document.body.classList;
+  var pressed = themeToggle.getAttribute('aria-pressed') === 'true';
+  if (pressed) {
+    bodyCl.remove('dark');
+    themeToggle.setAttribute('aria-pressed','false');
+    themeToggle.textContent = 'Toggle Dark';
+    localStorage.setItem('genuinecoin-theme','light');
+  } else {
+    bodyCl.add('dark');
+    themeToggle.setAttribute('aria-pressed','true');
+    themeToggle.textContent = 'Toggle Light';
+    localStorage.setItem('genuinecoin-theme','dark');
+  }
+});
+
+/* Restore theme preference */
+(function restoreTheme(){
+  try {
+    var pref = localStorage.getItem('genuinecoin-theme');
+    if (pref === 'dark') {
+      document.body.classList.add('dark');
+      themeToggle.setAttribute('aria-pressed','true');
+      themeToggle.textContent = 'Toggle Light';
+    }
+  } catch(e){}
+})();
+
+/* Initialize coin face */
+setCoinFace('heads');
+
+/* Accessibility: announce results using ARIA live region */
+var liveRegion = document.createElement('div');
+liveRegion.setAttribute('aria-live','polite');
+liveRegion.setAttribute('style','position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;');
+document.body.appendChild(liveRegion);
+
+/* Update live region after each flip */
+var originalPerformFlip = performFlip;
+performFlip = function() {
+  originalPerformFlip();
+  // Wait and then update live region with lastFlip once it's set
+  setTimeout(function() {
+    if (lastFlip) {
+      liveRegion.textContent = 'Flip result: ' + lastFlip;
+    }
+  }, 1400);
+};
+
+/* Defensive: if mapping contains a forced token but user enabled fairness, respect user */
+simulateFairCheckbox.addEventListener('change', function(ev) {
+  if (simulateFairCheckbox.checked) {
+    explainTextEl.textContent = 'Enforce fairness is ON — presets will be ignored';
+  } else {
+    explainTextEl.textContent = refParam && deterministicMapping[refParam] ? 'Preset token active: ' + refParam : 'No preset token active';
+  }
+});
+
+/* Make sure preset banner updates if user toggles fairness */
+simulateFairCheckbox.addEventListener('change', function() {
+  if (simulateFairCheckbox.checked) {
+    presetBannerText.textContent = presetBannerText.textContent + ' (ignored because fairness enforced)';
+  } else {
+    // restore original short message if possible (not strict)
+    if (refParam && deterministicMapping[refParam]) {
+      presetBannerText.textContent = 'A preset token was detected in the URL. This flip result will be predetermined unless you enable "Enforce fairness". Token: "' + refParam + '"';
+    }
+  }
+});
+
+/* Expose a debug hook for easily changing the mapping in the console:
+   window.__GenuineCoin_setToken = function(token, result) { deterministicMapping[token] = result; };
+   This is helpful for testing.
+*/
+window.__GenuineCoin_setToken = function(token, result) {
+  deterministicMapping[token] = result;
+  alert('Token set: ' + token + ' -> ' + result);
+};
+</script>
+</body>
+</html>

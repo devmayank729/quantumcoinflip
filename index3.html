@@ -168,39 +168,7 @@
         const resultContainer = document.getElementById('result-container');
 
         let isFlipping = false;
-        let currentRotation = 0;
-        
-        // --- NEW LOGIC: Variable to hold the forced result for the session ---
-        let forcedSessionResult = null;
-
-        // This function runs once when the page loads to check the URL
-        function checkUrlForManipulation() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const ref = urlParams.get('ref');
-            if (ref) {
-                const firstChar = ref.charAt(0).toLowerCase();
-                if (firstChar === 'a') {
-                    forcedSessionResult = 'heads';
-                } else if (firstChar === 'b') {
-                    forcedSessionResult = 'tails';
-                }
-            }
-             // --- HIDE THE EVIDENCE ---
-            // It still cleans the URL right away, but the result is already saved.
-            if (window.history.replaceState) {
-                const cleanUrl = window.location.href.split('?')[0];
-                try {
-                    window.history.replaceState({path: cleanUrl}, '', cleanUrl);
-                } catch (e) {
-                    // This can fail in sandboxed environments, which is fine.
-                    console.error("Could not clean URL:", e);
-                }
-            }
-        }
-        
-        // Run the check as soon as the page content is loaded
-        document.addEventListener('DOMContentLoaded', checkUrlForManipulation);
-
+        let currentRotation = 0; // Tracks the coin's rotation angle
 
         // Sound Synthesis with Tone.js
         const synth = new Tone.MetalSynth({
@@ -219,7 +187,9 @@
             if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
                 Tone.start();
             }
+            // A quick metallic "clink"
             synth.triggerAttackRelease("C4", "8n", Tone.now());
+            // A short burst of noise for the "whoosh"
             noise.start(Tone.now() + 0.01).stop(Tone.now() + 0.1);
         }
 
@@ -230,28 +200,52 @@
             flipBtn.disabled = true;
             resultText.classList.add('opacity-0');
             
+            // Play the sound
             playFlipSound();
 
+            // --- THE MANIPULATION LOGIC ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
             let finalResult;
 
-            // --- UPDATED LOGIC ---
-            // Check if a result was forced for this session
-            if (forcedSessionResult) {
-                finalResult = forcedSessionResult;
+            if (ref) {
+                const firstChar = ref.charAt(0).toLowerCase();
+                if (firstChar === 'a') {
+                    finalResult = 'heads';
+                } else if (firstChar === 'b') {
+                    finalResult = 'tails';
+                } else {
+                    // Fallback to random if ref is invalid
+                    finalResult = Math.random() < 0.5 ? 'heads' : 'tails';
+                }
             } else {
-                 // If not, perform a genuine random flip
+                 // Genuine random flip
                  finalResult = Math.random() < 0.5 ? 'heads' : 'tails';
             }
+
+            // --- HIDE THE EVIDENCE ---
+            // This is the crucial part. It removes the URL parameter without reloading the page.
+            if (window.history.replaceState) {
+                const cleanUrl = window.location.href.split('?')[0];
+                try {
+                    window.history.replaceState({path: cleanUrl}, '', cleanUrl);
+                } catch (e) {
+                    console.error("Could not clean URL, likely due to sandboxed environment:", e);
+                }
+            }
             
-            // --- ANIMATION LOGIC (No changes here) ---
-            const spins = 5; 
+            // --- NEW, RELIABLE ANIMATION LOGIC ---
+            const spins = 5; // Add 5 full spins
             currentRotation += (360 * spins);
 
+            // Determine if the current rotation angle represents a "tails" side up
             const isTailsFacing = (Math.round(currentRotation / 180) % 2) !== 0;
 
             if (finalResult === 'heads' && isTailsFacing) {
+                // If we want heads but are facing tails, add 180deg to flip over
                 currentRotation += 180;
             } else if (finalResult === 'tails' && !isTailsFacing) {
+                // If we want tails but are facing heads, add 180deg to flip over
                 currentRotation += 180;
             }
             
@@ -262,7 +256,7 @@
                 resultText.classList.remove('opacity-0');
                 isFlipping = false;
                 flipBtn.disabled = false;
-            }, 1500);
+            }, 1500); // Must match CSS transition duration
         });
         
         // Smooth scrolling for navigation links
